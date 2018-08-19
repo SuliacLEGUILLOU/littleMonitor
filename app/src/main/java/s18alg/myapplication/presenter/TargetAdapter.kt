@@ -19,7 +19,7 @@ class TargetAdapter(var Targets: List<TargetWebsite>, var context: Context): Bas
         row.target_ping.text = String.format("%.1fms", Targets[position].average_delay)
 
         row.target_uptime.text = when (Targets[position].tryNumber > 0) {
-            true -> String.format("%d%%", Targets[position].pingSuccess / Targets[position].tryNumber)
+            true -> String.format("%d%%", Targets[position].pingSuccess * 100 / Targets[position].tryNumber)
             false -> "No uptime information yet"
         }
         return row

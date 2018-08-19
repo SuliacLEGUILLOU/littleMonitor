@@ -23,4 +23,12 @@ data class TargetWebsite(
     fun select() {
         detailView = !detailView
     }
+
+    fun updatePing(status: Boolean, result: Double = 0.0) {
+        if (status) {
+            average_delay = ((average_delay * pingSuccess) + result) / (pingSuccess + 1)
+            pingSuccess++
+        }
+        tryNumber++
+    }
 }
