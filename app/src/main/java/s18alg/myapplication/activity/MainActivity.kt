@@ -16,13 +16,18 @@ import android.widget.AdapterView
 
 import kotlinx.android.synthetic.main.activity_main.*
 import kotlinx.android.synthetic.main.content_main.*
+import kotlinx.coroutines.experimental.CommonPool
+import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import okhttp3.*
 import s18alg.myapplication.R
+import s18alg.myapplication.R.id.targetListView
+import s18alg.myapplication.R.id.toolbar
 import s18alg.myapplication.model.AppDatabase
 import s18alg.myapplication.model.SingletonHolder
 import s18alg.myapplication.model.TargetWebsite
 import s18alg.myapplication.presenter.TargetAdapter
+import s18alg.myapplication.presenter.TargetDetailActivity
 import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.util.*
@@ -64,26 +69,27 @@ class MainActivity : AppCompatActivity() {
         timer.scheduleAtFixedRate(10000, 10000) {
             Log.i("DATA", "Scanning target")
             targetList.forEach {
-                try {
-                    val req = Request.Builder().url(it.uri).build()
-                    val timeStart = Calendar.getInstance().timeInMillis
+                if (it.isUriValide) {
+                    try {
+                        val req = Request.Builder().url(it.uri).build()
+                        val timeStart = Calendar.getInstance().timeInMillis
 
-                    client.newCall(req).enqueue(object : Callback {
-                        override fun onFailure(call: Call, e: IOException) {
-                            it.updatePing(false)
-                        }
-                        override fun onResponse(call: Call, response: Response) {
-                            // Set last code
-                            if (response.isSuccessful) {
-                                it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
-                            } else {
+                        client.newCall(req).enqueue(object : Callback {
+                            override fun onFailure(call: Call, e: IOException) {
                                 it.updatePing(false)
                             }
-                        }
-                    })
-                } catch (e: IllegalArgumentException) {
-                    // Mark the url as error here.
-                    it.updatePing(false)
+                            override fun onResponse(call: Call, response: Response) {
+                                it.returnCode = response.code()
+                                if (response.isSuccessful) {
+                                    it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
+                                } else {
+                                    it.updatePing(false)
+                                }
+                            }
+                        })
+                    } catch (e: IllegalArgumentException) {
+                        it.isUriValide = false
+                    }
                 }
             }
         }
@@ -114,12 +120,13 @@ class MainActivity : AppCompatActivity() {
 
     override fun onStop() {
         super.onStop()
-        launch {
+        val job = async(CommonPool) {
             targetList.forEach {
                 getInstance(applicationContext).targetDao().update(it)
             }
             Log.i("DATA", "data saved")
         }
+        //job.await()
     }
 
     override fun onCreateOptionsMenu(menu: Menu): Boolean {
@@ -138,8 +145,11 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    fun itemSelect(position: Int) {
+    private fun itemSelect(position: Int) {
         Log.d("Event", String.format("select elem %d", position))
+        val intent = Intent(this, TargetDetailActivity::class.java)
+        intent.putExtra("Target", targetList[position])
+        startActivity(intent)
     }
 
     private fun addTargetClicked(view: View) {

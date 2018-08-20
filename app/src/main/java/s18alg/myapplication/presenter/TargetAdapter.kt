@@ -1,6 +1,7 @@
 package s18alg.myapplication.presenter
 
 import android.content.Context
+import android.graphics.Color
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
@@ -21,6 +22,9 @@ class TargetAdapter(var Targets: List<TargetWebsite>, var context: Context): Bas
         row.target_uptime.text = when (Targets[position].tryNumber > 0) {
             true -> String.format("%d%%", Targets[position].pingSuccess * 100 / Targets[position].tryNumber)
             false -> "No uptime information yet"
+        }
+        if (!Targets[position].isUriValide) {
+            row.target_name.setTextColor(Color.parseColor("#dd2222"))
         }
         return row
     }
