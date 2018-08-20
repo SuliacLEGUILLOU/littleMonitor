@@ -21,7 +21,6 @@ data class TargetWebsite(
         set(value) {
             field = value
         }
-    var detailView: Boolean = false
     var isUriValide = true
 
     constructor(parcel: Parcel) : this(
@@ -30,12 +29,7 @@ data class TargetWebsite(
             parcel.readInt(),
             parcel.readInt(),
             parcel.readInt()) {
-        detailView = parcel.readByte() != 0.toByte()
         isUriValide = parcel.readByte() != 0.toByte()
-    }
-
-    fun select() {
-        detailView = !detailView
     }
 
     fun updatePing(status: Boolean, result: Double = 0.0) {
@@ -52,7 +46,6 @@ data class TargetWebsite(
         parcel.writeInt(tryNumber)
         parcel.writeInt(pingSuccess)
         parcel.writeInt(returnCode)
-        parcel.writeByte(if (detailView) 1 else 0)
         parcel.writeByte(if (isUriValide) 1 else 0)
     }
 
