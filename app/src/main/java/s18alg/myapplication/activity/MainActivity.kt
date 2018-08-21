@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
+import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -20,9 +21,8 @@ import kotlinx.coroutines.experimental.CommonPool
 import kotlinx.coroutines.experimental.async
 import kotlinx.coroutines.experimental.launch
 import okhttp3.*
+import s18alg.myapplication.NotificationService
 import s18alg.myapplication.R
-import s18alg.myapplication.R.id.targetListView
-import s18alg.myapplication.R.id.toolbar
 import s18alg.myapplication.model.AppDatabase
 import s18alg.myapplication.model.SingletonHolder
 import s18alg.myapplication.model.TargetWebsite
@@ -44,11 +44,13 @@ class MainActivity : AppCompatActivity() {
     private val ADD_TARGET_REQUEST = 1
     private val client = OkHttpClient()
     private val timer = Timer()
+    private var notificationService: NotificationService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         setSupportActionBar(toolbar)
+        notificationService = NotificationService(applicationContext)
 
         targetListView.adapter = adapter
         targetListView.onItemClickListener = AdapterView.OnItemClickListener { parent, view, position, id -> itemSelect(position) }
@@ -69,6 +71,7 @@ class MainActivity : AppCompatActivity() {
         timer.scheduleAtFixedRate(10000, 10000) {
             Log.i("DATA", "Scanning target")
             targetList.forEach {
+                Log.d("END OF THE LOOP", "Iteration")
                 if (it.isUriValide) {
                     try {
                         val req = Request.Builder().url(it.uri).build()
@@ -76,15 +79,25 @@ class MainActivity : AppCompatActivity() {
 
                         client.newCall(req).enqueue(object : Callback {
                             override fun onFailure(call: Call, e: IOException) {
+                                if (it.returnCode != 503 && it.returnCode != 0) {
+                                    notificationService?.addTargetToNotificaiton(it)
+                                }
                                 it.updatePing(false)
+                                it.returnCode = 503
                             }
                             override fun onResponse(call: Call, response: Response) {
-                                it.returnCode = response.code()
                                 if (response.isSuccessful) {
+                                    if (it.returnCode != response.code()) {
+                                        notificationService?.removeTargetFromNotification(it)
+                                    }
                                     it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
                                 } else {
+                                    if (it.returnCode != response.code()) {
+                                        notificationService?.addTargetToNotificaiton(it)
+                                    }
                                     it.updatePing(false)
                                 }
+                                it.returnCode = response.code()
                             }
                         })
                     } catch (e: IllegalArgumentException) {
@@ -92,6 +105,8 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
             }
+            notificationService?.notifyTarget()
+            Log.d("END OF THE LOOP", "test")
         }
     }
 
