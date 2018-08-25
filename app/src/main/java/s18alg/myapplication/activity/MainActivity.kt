@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
-import android.support.v4.app.NotificationCompat
 import android.support.v7.app.AppCompatActivity
 import android.util.Log
 import android.view.Menu
@@ -24,10 +23,10 @@ import okhttp3.*
 import s18alg.myapplication.NotificationService
 import s18alg.myapplication.R
 import s18alg.myapplication.model.AppDatabase
+import s18alg.myapplication.model.Profile
 import s18alg.myapplication.model.SingletonHolder
 import s18alg.myapplication.model.TargetWebsite
 import s18alg.myapplication.presenter.TargetAdapter
-import s18alg.myapplication.presenter.TargetDetailActivity
 import java.io.IOException
 import java.lang.IllegalArgumentException
 import java.util.*
@@ -175,9 +174,12 @@ class MainActivity : AppCompatActivity() {
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
         if (requestCode == ADD_TARGET_REQUEST && resultCode == Activity.RESULT_OK) {
-            val target = data?.getStringExtra(TargetDescriptionActivity.NEW_TARGET_DESCRIPTION)
+            val target = data?.getStringExtra(TargetDescriptionActivity.NEW_TARGET_URI)
+            val targetProfile = data?.getIntExtra(TargetDescriptionActivity.NEW_TARGET_PROFILE, 3)
+
+
             target?.let {
-                val newTarget = TargetWebsite(target)
+                val newTarget = TargetWebsite(target, Profile.of(targetProfile!!))
                 targetList.add(newTarget)
                 adapter.notifyDataSetChanged()
                 launch {

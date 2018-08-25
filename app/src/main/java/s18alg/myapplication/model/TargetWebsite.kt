@@ -1,14 +1,13 @@
 package s18alg.myapplication.model
 
-import android.arch.persistence.room.ColumnInfo
-import android.arch.persistence.room.Entity
-import android.arch.persistence.room.PrimaryKey
+import android.arch.persistence.room.*
 import android.os.Parcel
 import android.os.Parcelable
 
 @Entity(tableName = "Targets")
 data class TargetWebsite(
-        @ColumnInfo(name = "uri") var uri: String,
+        @ColumnInfo(name = "uri") var uri: String = "",
+        @ColumnInfo(name = "profile") @TypeConverters(ProfileConverter::class) var profile: Profile = Profile.Other,
         @ColumnInfo(name = "ping_avg_delay") var average_delay: Double = 0.0,
         @ColumnInfo(name = "ping_try") var tryNumber: Int = 0,
         @ColumnInfo(name = "ping_success") var pingSuccess: Int = 0,
@@ -25,10 +24,12 @@ data class TargetWebsite(
 
     constructor(parcel: Parcel) : this(
             parcel.readString(),
+            Profile.of(parcel.readInt()),
             parcel.readDouble(),
             parcel.readInt(),
             parcel.readInt(),
-            parcel.readInt()) {
+            parcel.readInt()
+    ) {
         isUriValide = parcel.readByte() != 0.toByte()
     }
 
@@ -42,6 +43,7 @@ data class TargetWebsite(
 
     override fun writeToParcel(parcel: Parcel, flags: Int) {
         parcel.writeString(uri)
+        parcel.writeInt(profile.ordinal)
         parcel.writeDouble(average_delay)
         parcel.writeInt(tryNumber)
         parcel.writeInt(pingSuccess)

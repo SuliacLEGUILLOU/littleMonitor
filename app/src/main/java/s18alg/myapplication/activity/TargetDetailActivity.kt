@@ -1,4 +1,4 @@
-package s18alg.myapplication.presenter
+package s18alg.myapplication.activity
 
 import android.support.v7.app.AppCompatActivity
 import android.os.Bundle
@@ -20,5 +20,6 @@ class TargetDetailActivity : AppCompatActivity() {
         target_detail_code.text = target.returnCode.toString()
         target_detail_ping.text = formatPingText(target)
         target_detail_uptime.text = formatUptime(target)
+        target_detail_profile.text = target.profile.name
     }
 }

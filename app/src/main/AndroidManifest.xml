@@ -22,7 +22,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".activity.TargetDescriptionActivity"></activity>
-        <activity android:name=".presenter.TargetDetailActivity"></activity>
+        <activity android:name=".activity.TargetDetailActivity"></activity>
     </application>
 
 </manifest>
