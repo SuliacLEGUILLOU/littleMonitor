@@ -17,9 +17,9 @@ class TargetDetailActivity : AppCompatActivity() {
         val target = intent.getParcelableExtra<TargetWebsite>("Target")
 
         target_detail_name.text = target.uri
-        target_detail_code.text = target.returnCode.toString()
+        target_detail_code.text = String.format("Last return code : %d", target.returnCode)
         target_detail_ping.text = formatPingText(target)
         target_detail_uptime.text = formatUptime(target)
-        target_detail_profile.text = target.profile.name
+        target_detail_profile.text = String.format("Profile : %s", target.profile.name)
     }
 }
