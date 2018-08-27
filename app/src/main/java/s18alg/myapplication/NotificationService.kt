@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.graphics.Color
-import android.net.Uri
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat.getSystemService
 import s18alg.myapplication.activity.MainActivity
@@ -14,9 +13,7 @@ import s18alg.myapplication.model.Profile
 import s18alg.myapplication.model.TargetWebsite
 import java.net.URI
 import java.time.DayOfWeek
-import java.time.LocalDate
 import java.time.LocalDateTime
-import java.time.LocalTime
 
 class NotificationService(context: Context) {
     private var notificationManager: NotificationManager? = null
@@ -24,7 +21,7 @@ class NotificationService(context: Context) {
 
     private var intentMainActivity = Intent(context, MainActivity::class.java)
     private val mContext = context
-    private val targetToNotify: HashMap<Int, TargetWebsite> = hashMapOf()
+    private val downTargets: HashMap<Int, TargetWebsite> = hashMapOf()
 
     private val CHANNEL_ID = "targetdown.notification"
 
@@ -54,15 +51,14 @@ class NotificationService(context: Context) {
         notificationManager?.createNotificationChannel(channel)
     }
 
-    private fun istargetTobeNotified(target: TargetWebsite): Boolean {
+    private fun isTargetTobeNotified(target: TargetWebsite): Boolean {
         return when (target.profile) {
             Profile.Personal -> true
             Profile.Other -> false
             Profile.Professional -> {
                 val currentTime = LocalDateTime.now()
-                if (currentTime.dayOfWeek == DayOfWeek.of(6) || currentTime.dayOfWeek == DayOfWeek.of(7)) {
-                    return false
-                } else if (currentTime.hour !in 8..17) {
+                if ((currentTime.dayOfWeek == DayOfWeek.of(6) || currentTime.dayOfWeek == DayOfWeek.of(7))
+                || currentTime.hour !in 8..17) {
                     return false
                 }
                 return true
@@ -71,29 +67,31 @@ class NotificationService(context: Context) {
     }
 
     fun notifyTarget() {
-        if (!targetToNotify.isEmpty()) {
+        if (!downTargets.isEmpty()) {
             var text = ""
 
-            targetToNotify.forEach {
-                text += URI(it.value.uri).host + "\n"
+            downTargets.forEach {
+                if (isTargetTobeNotified(it.value)) {
+                    text += URI(it.value.uri).host + "\n"
+                }
             }
-            notificationBuilder.setContentTitle(String.format("%d target have gone down", targetToNotify.size))
-            notificationBuilder.setContentText(text)
-            notificationManager?.notify(101, notificationBuilder.build())
+            if (text != "") {
+                notificationBuilder.setContentTitle(String.format("%d target have gone down", downTargets.size))
+                notificationBuilder.setContentText(text)
+                notificationManager?.notify(101, notificationBuilder.build())
+            }
         } else {
             notificationManager?.cancel(101)
         }
     }
 
-    fun addTargetToNotificaiton(target: TargetWebsite) {
-        if (istargetTobeNotified(target)) {
-            targetToNotify[target.id] = target
-        }
+    fun addTargetToNotification(target: TargetWebsite) {
+        downTargets[target.id] = target
     }
 
     fun removeTargetFromNotification(target: TargetWebsite) {
-        if (targetToNotify.containsKey(target.id)) {
-            targetToNotify.remove(target.id)
+        if (downTargets.containsKey(target.id)) {
+            downTargets.remove(target.id)
         }
     }
 }

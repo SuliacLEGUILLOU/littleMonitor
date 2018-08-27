@@ -83,7 +83,7 @@ class MainActivity : AppCompatActivity() {
                             client.newCall(req).enqueue(object : Callback {
                                 override fun onFailure(call: Call, e: IOException) {
                                     if (it.returnCode != 503 && it.returnCode != 0) {
-                                        notificationService?.addTargetToNotificaiton(it)
+                                        notificationService?.addTargetToNotification(it)
                                     }
                                     it.updatePing(false)
                                     it.returnCode = 503
@@ -97,7 +97,7 @@ class MainActivity : AppCompatActivity() {
                                         it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
                                     } else {
                                         if (it.returnCode != response.code()) {
-                                            notificationService?.addTargetToNotificaiton(it)
+                                            notificationService?.addTargetToNotification(it)
                                         }
                                         it.updatePing(false)
                                     }
