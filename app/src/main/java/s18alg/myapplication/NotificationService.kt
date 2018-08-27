@@ -10,8 +10,13 @@ import android.net.Uri
 import android.support.v4.app.NotificationCompat
 import android.support.v4.content.ContextCompat.getSystemService
 import s18alg.myapplication.activity.MainActivity
+import s18alg.myapplication.model.Profile
 import s18alg.myapplication.model.TargetWebsite
 import java.net.URI
+import java.time.DayOfWeek
+import java.time.LocalDate
+import java.time.LocalDateTime
+import java.time.LocalTime
 
 class NotificationService(context: Context) {
     private var notificationManager: NotificationManager? = null
@@ -49,6 +54,22 @@ class NotificationService(context: Context) {
         notificationManager?.createNotificationChannel(channel)
     }
 
+    private fun istargetTobeNotified(target: TargetWebsite): Boolean {
+        return when (target.profile) {
+            Profile.Personal -> true
+            Profile.Other -> false
+            Profile.Professional -> {
+                val currentTime = LocalDateTime.now()
+                if (currentTime.dayOfWeek == DayOfWeek.of(6) || currentTime.dayOfWeek == DayOfWeek.of(7)) {
+                    return false
+                } else if (currentTime.hour !in 8..17) {
+                    return false
+                }
+                return true
+            }
+        }
+    }
+
     fun notifyTarget() {
         if (!targetToNotify.isEmpty()) {
             var text = ""
@@ -65,7 +86,9 @@ class NotificationService(context: Context) {
     }
 
     fun addTargetToNotificaiton(target: TargetWebsite) {
-        targetToNotify[target.id] = target
+        if (istargetTobeNotified(target)) {
+            targetToNotify[target.id] = target
+        }
     }
 
     fun removeTargetFromNotification(target: TargetWebsite) {
