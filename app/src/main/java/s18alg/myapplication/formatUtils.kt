@@ -10,5 +10,5 @@ fun formatUptime(target: TargetWebsite): String {
 }
 
 fun formatPingText(target: TargetWebsite): String {
-    return String.format("Current delay : %.1fms", target.average_delay)
+    return String.format("Average delay : %.1fms", target.average_delay)
 }

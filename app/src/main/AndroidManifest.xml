@@ -23,8 +23,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".activity.TargetDescriptionActivity"></activity>
-        <activity android:name=".activity.TargetDetailActivity"></activity>
+        <activity android:name=".activity.TargetDescriptionActivity" />
+        <activity android:name=".activity.TargetDetailActivity" />
+        <activity android:name=".activity.HelpActivity"></activity>
     </application>
 
 </manifest>

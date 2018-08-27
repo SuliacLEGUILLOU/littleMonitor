@@ -1,4 +1,16 @@
 <resources>
     <string name="app_name">littleMonitor</string>
     <string name="action_settings">Settings</string>
+    <string name="action_help">Help</string>
+
+    <string name="help_title">Help</string>
+
+    <string name="help_purpose">Help you monitor thing over the internet. Only handle http request at the moment.</string>
+
+    <string name="help_text_profile_title">Target Profile :</string>
+    <string name="help_text_profile_personal">- Personal : Will always notify you when target is down</string>
+    <string name="help_text_profile_professional">- Professional : Will notify you on monday to friday, from 8am to 6pm</string>
+    <string name="help_text_profile_other">- Other : Do not notify you when the target goes down</string>
+
+    <string name="help_license">This application is under the GPL License. Code is available at https://github.com/SuliacLEGUILLOU/littleMonitor</string>
 </resources>
