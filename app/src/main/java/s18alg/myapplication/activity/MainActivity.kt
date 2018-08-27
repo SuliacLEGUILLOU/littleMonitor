@@ -22,6 +22,7 @@ import kotlinx.coroutines.experimental.launch
 import okhttp3.*
 import s18alg.myapplication.NotificationService
 import s18alg.myapplication.R
+import s18alg.myapplication.checkConnection
 import s18alg.myapplication.model.AppDatabase
 import s18alg.myapplication.model.Profile
 import s18alg.myapplication.model.SingletonHolder
@@ -68,44 +69,49 @@ class MainActivity : AppCompatActivity() {
 
     private fun targetsScanService() {
         timer.scheduleAtFixedRate(10000, 10000) {
-            Log.i("DATA", "Scanning target")
-            targetList.forEach {
-                Log.d("END OF THE LOOP", "Iteration")
-                if (it.isUriValide) {
-                    try {
-                        val req = Request.Builder().url(it.uri).build()
-                        val timeStart = Calendar.getInstance().timeInMillis
+            if (!checkConnection(applicationContext)) {
+                Log.i("CONNECTION_INFO", "Connection status prevented scan")
+            } else {
+                Log.i("DATA", "Scanning target")
+                targetList.forEach {
+                    Log.d("END OF THE LOOP", "Iteration")
+                    if (it.isUriValide) {
+                        try {
+                            val req = Request.Builder().url(it.uri).build()
+                            val timeStart = Calendar.getInstance().timeInMillis
 
-                        client.newCall(req).enqueue(object : Callback {
-                            override fun onFailure(call: Call, e: IOException) {
-                                if (it.returnCode != 503 && it.returnCode != 0) {
-                                    notificationService?.addTargetToNotificaiton(it)
-                                }
-                                it.updatePing(false)
-                                it.returnCode = 503
-                            }
-                            override fun onResponse(call: Call, response: Response) {
-                                if (response.isSuccessful) {
-                                    if (it.returnCode != response.code()) {
-                                        notificationService?.removeTargetFromNotification(it)
-                                    }
-                                    it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
-                                } else {
-                                    if (it.returnCode != response.code()) {
+                            client.newCall(req).enqueue(object : Callback {
+                                override fun onFailure(call: Call, e: IOException) {
+                                    if (it.returnCode != 503 && it.returnCode != 0) {
                                         notificationService?.addTargetToNotificaiton(it)
                                     }
                                     it.updatePing(false)
+                                    it.returnCode = 503
                                 }
-                                it.returnCode = response.code()
-                            }
-                        })
-                    } catch (e: IllegalArgumentException) {
-                        it.isUriValide = false
+
+                                override fun onResponse(call: Call, response: Response) {
+                                    if (response.isSuccessful) {
+                                        if (it.returnCode != response.code()) {
+                                            notificationService?.removeTargetFromNotification(it)
+                                        }
+                                        it.updatePing(true, (Calendar.getInstance().timeInMillis - timeStart) * 1.0)
+                                    } else {
+                                        if (it.returnCode != response.code()) {
+                                            notificationService?.addTargetToNotificaiton(it)
+                                        }
+                                        it.updatePing(false)
+                                    }
+                                    it.returnCode = response.code()
+                                }
+                            })
+                        } catch (e: IllegalArgumentException) {
+                            it.isUriValide = false
+                        }
                     }
                 }
+                notificationService?.notifyTarget()
+                Log.d("END OF THE LOOP", "test")
             }
-            notificationService?.notifyTarget()
-            Log.d("END OF THE LOOP", "test")
         }
     }
 
