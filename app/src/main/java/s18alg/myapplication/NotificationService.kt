@@ -15,31 +15,32 @@ import java.net.URI
 import java.time.DayOfWeek
 import java.time.LocalDateTime
 
-class NotificationService(context: Context) {
+class NotificationService(mContext: Context? = null) {
     private var notificationManager: NotificationManager? = null
-    private var pendingIntent: PendingIntent
+    private var notificationBuilder: NotificationCompat.Builder? = null
+    private var pendingIntent: PendingIntent? = null
+    private var intentMainActivity = Intent(mContext, MainActivity::class.java)
 
-    private var intentMainActivity = Intent(context, MainActivity::class.java)
-    private val mContext = context
     private val downTargets: HashMap<Int, TargetWebsite> = hashMapOf()
 
     private val CHANNEL_ID = "targetdown.notification"
 
-    private val notificationBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)
-            .setSmallIcon(R.drawable.ic_service_in_trouble)
-            .setContentTitle("My title")
-            .setContentText("Stuff is going bad")
-            .setChannelId(CHANNEL_ID)
-            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
-
     init {
-        notificationManager = getSystemService(mContext, NotificationManager::class.java)
-        createNotificationChannel()
+        if (mContext != null) {
+            notificationBuilder = NotificationCompat.Builder(mContext, CHANNEL_ID)
+                    .setSmallIcon(R.drawable.ic_service_in_trouble)
+                    .setContentTitle("My title")
+                    .setContentText("Stuff is going bad")
+                    .setChannelId(CHANNEL_ID)
+                    .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            notificationManager = getSystemService(mContext, NotificationManager::class.java)
+            createNotificationChannel()
 
-        // Initialise intent to make the notification point to mainActivity
-        intentMainActivity.flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
-        pendingIntent = PendingIntent.getActivity(mContext, 0, intentMainActivity, 0)
-        notificationBuilder.setContentIntent(pendingIntent)
+            // Initialise intent to make the notification point to mainActivity
+            intentMainActivity.flags = (Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK)
+            pendingIntent = PendingIntent.getActivity(mContext, 0, intentMainActivity, 0)
+            notificationBuilder?.setContentIntent(pendingIntent)
+        }
     }
 
     private fun createNotificationChannel() {
@@ -51,14 +52,13 @@ class NotificationService(context: Context) {
         notificationManager?.createNotificationChannel(channel)
     }
 
-    private fun isTargetTobeNotified(target: TargetWebsite): Boolean {
+    fun isTargetTobeNotified(target: TargetWebsite, timeProvider: LocalDateTime = LocalDateTime.now()): Boolean {
         return when (target.profile) {
             Profile.Personal -> true
             Profile.Other -> false
             Profile.Professional -> {
-                val currentTime = LocalDateTime.now()
-                if ((currentTime.dayOfWeek == DayOfWeek.of(6) || currentTime.dayOfWeek == DayOfWeek.of(7))
-                || currentTime.hour !in 8..17) {
+                if ((timeProvider.dayOfWeek == DayOfWeek.of(6) || timeProvider.dayOfWeek == DayOfWeek.of(7))
+                || timeProvider.hour !in 8..17) {
                     return false
                 }
                 return true
@@ -76,9 +76,9 @@ class NotificationService(context: Context) {
                 }
             }
             if (text != "") {
-                notificationBuilder.setContentTitle(String.format("%d target have gone down", downTargets.size))
-                notificationBuilder.setContentText(text)
-                notificationManager?.notify(101, notificationBuilder.build())
+                notificationBuilder?.setContentTitle(String.format("%d target have gone down", downTargets.size))
+                notificationBuilder?.setContentText(text)
+                notificationManager?.notify(101, notificationBuilder?.build())
             }
         } else {
             notificationManager?.cancel(101)
@@ -93,5 +93,9 @@ class NotificationService(context: Context) {
         if (downTargets.containsKey(target.id)) {
             downTargets.remove(target.id)
         }
+    }
+
+    fun getDownTargetSize() : Int {
+        return downTargets.size
     }
 }
